@@ -1,0 +1,21 @@
+O que são fluxogramas?
+-É a representação visual de uma Sequência lógica.
+
+
+Representação do início e fim do fluxograma:
+- input com borda arredondada
+
+Representação da entrada de dados do fluxograma:
+- input em formato de paralelepípedo
+
+Representação da estrutura de decisão:
+- input em formato de losango
+
+Representação da estrutura de ações:
+- input em formato retangular
+
+Representação de estrutura de loop:
+- input em formato de losango
+
+Representação de saída de dados ou mensagem:
+- input em formato de trapézio
