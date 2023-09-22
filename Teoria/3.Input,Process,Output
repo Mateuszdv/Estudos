@@ -1,0 +1,8 @@
+Conceito de Input:
+- Todo momento de interação com o usuário
+
+Conceito de Process:
+- Verificações e ações para tratar os dados do usuário
+
+Conceito de Output
+- Retorno do process, retornando o que for necessário para o usuário
