@@ -8,3 +8,4 @@ o Que é o Node.js
 o Que é npm
   é um gerenciador de pacotes do node (node package manager)
   Podemos utilizar bibliotecas de terceiros, baixando pelo npm
+
