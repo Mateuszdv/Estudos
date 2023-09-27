@@ -1,0 +1,10 @@
+o Que é o Node.js
+  O node.js é uma runtime do javascript
+  ou seja, uma biblioteca utilizada por um compilador
+  construída na v8 engine, que pega o código em javascript e executa em c++ para garantir alta performance.
+
+
+
+o Que é npm
+  é um gerenciador de pacotes do node (node package manager)
+  Podemos utilizar bibliotecas de terceiros, baixando pelo npm

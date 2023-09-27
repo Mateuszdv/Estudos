@@ -1,0 +1,22 @@
+Conceito de variáveis
+-Local onde é reservado uma memória do programa para guardar algum tipo de informação.
+
+Diferença entre var e let:
+  Var:
+  -pode ser redeclarada, o que não acontece no let.
+  -problemas com hoisting
+
+  Let:
+  -possui escopo de bloco
+  -não pode ser redeclarada no mesmo escopo
+  
+
+Tipos de variáveis:
+  String:
+  -Serve para armazenamento de texto
+  Number:
+  -Serve para armazenamento de número
+  Boolean:
+  -Serve para armazenamento de true/false
+  Array:
+  -Serve para armazenar mais de um valor em uma única variável

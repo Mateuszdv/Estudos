@@ -1,0 +1,2 @@
+Conceito de variáveis
+-Local onde é reservado uma memória do programa para guardar algum tipo de informação imutável.
