@@ -1,0 +1,1 @@
+{"balance":7000,"transactions":[{"type":"deposit","amount":10000},{"type":"transfer out","amount":3000,"toAccount":"Tuts"}]}
