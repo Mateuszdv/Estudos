@@ -8,48 +8,54 @@ const { create } = require("domain")
 const { parse } = require("path")
 
 console.log("Iniciamos o Accounts")
+const choices = {
+  "Criar Conta": createAccount,
+  "Consultar Saldo": getAccountBalance,
+  Depositar: deposit,
+  Transferir: transfer,
+  Sacar: withdraw,
+  "Exibir extrato: ": transactionHistory,
+  Sair: undefined,
+}
 
 operation()
 
-function operation() {
-  inquirer
-    .prompt([
+//Criar um novo menu de acessar conta ou criar uma nova conta
+//Todas as operações utilizem a conta acessada/criada
+//Não deve ser possivel, chegar no menu de operações sem uma conta valida acessada
+//Criar conta com CPF (validação de cpf com pacote npm)
+//Tentar alterar a logica da transactionHistory
+//Tentar trabalhar com funçoes asincronas ao inves de promises OK!
+
+//Opcional: Desafio adicionar senha para a conta OK!
+
+// Estudar:
+// Protocolo http de comunicação
+// Padrão APIRestfull
+// Status code http
+
+async function operation() {
+  try {
+    const answer = await inquirer.prompt([
       {
         type: "list",
         name: "action",
         message: "O que você deseja fazer?",
-        choices: [
-          "Criar Conta",
-          "Consultar Saldo",
-          "Depositar",
-          "Transferir",
-          "Sacar",
-          "Exibir extrato",
-          "Sair",
-        ],
+        choices: Object.keys(choices),
       },
     ])
-    .then((answer) => {
-      const action = answer["action"]
+    const action = answer["action"]
+    const actionFunction = choices[action]
 
-      if (action === "Criar Conta") {
-        createAccount()
-      } else if (action === "Consultar Saldo") {
-        getAccountBalance()
-      } else if (action === "Depositar") {
-        deposit()
-      } else if (action === "Transferir") {
-        transfer()
-      } else if (action === "Exibir extrato") {
-        transactionHistory()
-      } else if (action === "Sacar") {
-        withdraw()
-      } else if (action === "Sair") {
-        console.log(chalk.bgBlue.black("Obrigado por usar o Accounts"))
-        process.exit()
-      }
-    })
-    .catch((err) => console.log(err))
+    if (!actionFunction) {
+      console.log(chalk.bgBlue.black("Obrigado por usar o Accounts"))
+      process.exit()
+    }
+
+    actionFunction()
+  } catch (err) {
+    console.log(err)
+  }
 }
 
 // create an account
@@ -60,78 +66,86 @@ function createAccount() {
   buildAccount()
 }
 
-function buildAccount() {
-  inquirer
-    .prompt([
+async function buildAccount() {
+  try {
+    const answer = await inquirer.prompt([
       {
         name: "accountName",
         message: "Digite um nome para a sua conta:",
       },
     ])
-    .then((answer) => {
-      const accountName = answer["accountName"]
-      console.info(accountName)
+    const accountName = answer["accountName"]
+    console.info(accountName)
 
-      if (!fs.existsSync("accounts")) {
-        fs.mkdirSync("accounts")
-      }
+    const answer2 = await inquirer.prompt([
+      {
+        type: "password",
+        mask: "*",
+        name: "password",
+        message: "Digite sua senha",
+      },
+    ])
+    const accountPassword = answer2["password"]
 
-      if (fs.existsSync(`accounts/${accountName}.json`)) {
-        console.log(
-          chalk.bgRed.black("Esta conta já existe, escolha outro nome.")
-        )
-        buildAccount()
-        return
-      }
+    if (!fs.existsSync("accounts")) {
+      fs.mkdirSync("accounts")
+    }
 
-      fs.writeFileSync(
-        `accounts/${accountName}.json`,
-        '{ "balance": 0, "transactions": []}',
-        function (err) {
-          console.log(err)
-        }
+    if (fs.existsSync(`accounts/${accountName}.json`)) {
+      console.log(
+        chalk.bgRed.black("Esta conta já existe, escolha outro nome.")
       )
+      buildAccount()
+      return
+    }
 
-      console.log(chalk.green("Parabéns, a sua conta foi criada."))
-      operation()
-    })
-    .catch((err) => console.log(err))
+    fs.writeFileSync(
+      `accounts/${accountName}.json`,
+      JSON.stringify({
+        balance: 0,
+        transactions: [],
+        password: accountPassword,
+      }),
+      function (err) {
+        console.log(err)
+      }
+    )
+
+    console.log(chalk.green("Parabéns, a sua conta foi criada."))
+    operation()
+  } catch (err) {
+    console.log(err)
+  }
 }
 
 //add an amount to user account
-function deposit() {
-  inquirer
-    .prompt([
+async function deposit() {
+  try {
+    const answer = await inquirer.prompt([
       {
         name: "accountName",
         message: "Qual o nome da sua conta?",
       },
     ])
-    .then((answer) => {
-      const accountName = answer["accountName"]
+    const accountName = answer["accountName"]
 
-      //verify if account exists
-      if (!checkAccount(accountName)) {
-        return deposit()
-      }
+    //verify if account exists
+    if (!checkAccount(accountName)) {
+      return deposit()
+    }
+    answer2 = await inquirer.prompt([
+      {
+        name: "amount",
+        message: "Quanto você deseja depositar? ",
+      },
+    ])
+    const amount = answer2["amount"]
 
-      inquirer
-        .prompt([
-          {
-            name: "amount",
-            message: "Quanto você deseja depositar? ",
-          },
-        ])
-        .then((answer) => {
-          const amount = answer["amount"]
-
-          //add an amount
-          addAmount(accountName, amount)
-          operation()
-        })
-        .catch((err) => console.log(err))
-    })
-    .catch((err) => console.log(err))
+    //add an amount
+    addAmount(accountName, amount)
+  } catch (err) {
+    console.log(err)
+  }
 }
 
 function checkAccount(accountName) {
@@ -144,7 +158,7 @@ function checkAccount(accountName) {
 
 function addAmount(accountName, amount) {
   const accountData = getAccount(accountName)
-  if (!amount) {
+  if (!amount || amount < 0 || amount == 0) {
     console.log(
       chalk.bgRed.black("Ocorreu um erro, tente novamente mais tarde!")
     )
@@ -164,6 +178,7 @@ function addAmount(accountName, amount) {
   console.log(
     chalk.green(`Foi depositado o valor de R$${amount} na sua conta!`)
   )
+  operation()
 }
 
 function getAccount(accountName) {
@@ -175,70 +190,65 @@ function getAccount(accountName) {
 }
 
 // show account balance
-function getAccountBalance() {
-  inquirer
-    .prompt([
+async function getAccountBalance() {
+  try {
+    const answer = await inquirer.prompt([
       {
         name: "accountName",
         message: "Qual o nome da sua conta?",
       },
     ])
-    .then((answer) => {
-      const accountName = answer["accountName"]
+    const accountName = answer["accountName"]
 
-      //verify if account exists
-      if (!checkAccount(accountName)) {
-        return getAccountBalance()
-      }
+    //verify if account exists
+    if (!checkAccount(accountName)) {
+      return getAccountBalance()
+    }
 
-      const accountData = getAccount(accountName)
+    const accountData = getAccount(accountName)
 
-      console.log(
-        chalk.bgBlue.black(
-          `Olá, o saldo da sua conta é de R$${accountData.balance}`
-        )
+    console.log(
+      chalk.bgBlue.black(
+        `Olá, o saldo da sua conta é de R$${accountData.balance}`
       )
-      operation()
-    })
-    .catch((err) => console.log(err))
+    )
+    operation()
+  } catch (err) {
+    console.log(err)
+  }
 }
 
 // withdraw an amount from user account
-function withdraw() {
-  inquirer
-    .prompt([
+async function withdraw() {
+  try {
+    const answer = await inquirer.prompt([
       {
         name: "accountName",
         message: "Qual o nome da sua conta?",
       },
     ])
-    .then((answer) => {
-      const accountName = answer["accountName"]
+    const accountName = answer["accountName"]
 
-      if (!checkAccount(accountName)) {
-        return withdraw()
-      }
-
-      inquirer
-        .prompt([
-          {
-            name: "amount",
-            message: "Quanto você deseja sacar?",
-          },
-        ])
-        .then((answer) => {
-          const amount = answer["amount"]
-          removeAmount(accountName, amount)
-        })
-        .catch((err) => console.log(err))
-    })
-    .catch((err) => console.log(err))
+    if (!checkAccount(accountName)) {
+      return withdraw()
+    }
+    const answer2 = await inquirer.prompt([
+      {
+        name: "amount",
+        message: "Quanto você deseja sacar?",
+      },
+    ])
+    const amount = answer2["amount"]
+    removeAmount(accountName, amount)
+  } catch (err) {
+    console.log(err)
+  }
 }
 
 function removeAmount(accountName, amount) {
   const accountData = getAccount(accountName)
 
-  if (!amount) {
+  if (!amount || amount < 0 || amount == 0) {
     console.log(
       chalk.bgRed.black("Ocorreu um erro, tente novamente mais tarde!")
     )
@@ -271,56 +281,52 @@ function removeAmount(accountName, amount) {
 }
 
 // transfer between two accounts
-function transfer() {
-  inquirer
-    .prompt([
+// tem jeito de fazer isso mais simples ctz.
+// preciso colocar 3 const pras 3 answer?
+async function transfer() {
+  try {
+    const answer = await inquirer.prompt([
       {
         name: "accountName",
         message: "Qual a sua conta?",
       },
     ])
-    .then((answer) => {
-      const accountName = answer["accountName"]
+    const accountName = answer["accountName"]
 
-      if (!checkAccount(accountName)) {
-        return transfer()
-      }
-      inquirer
-        .prompt([
-          {
-            name: "accountName2",
-            message: "Para qual conta deseja transferir?",
-          },
-        ])
-        .then((answer) => {
-          const accountName2 = answer["accountName2"]
+    if (!checkAccount(accountName)) {
+      return transfer()
+    }
+    const answer2 = await inquirer.prompt([
+      {
+        name: "accountName2",
+        message: "Para qual conta deseja transferir?",
+      },
+    ])
+    const accountName2 = answer2["accountName2"]
 
-          if (!checkAccount(accountName2)) {
-            return transfer()
-          }
-          inquirer
-            .prompt([
-              {
-                name: "amount",
-                message: `Quanto deseja transferir da conta ${accountName} para a conta ${accountName2}`,
-              },
-            ])
-            .then((answer) => {
-              const amount = answer["amount"]
-              transferAmount(accountName, accountName2, amount)
-            })
-            .catch((err) => console.log(err))
-        })
-        .catch((err) => console.log(err))
-    })
-    .catch((err) => console.log(err))
+    if (!checkAccount(accountName2)) {
+      return transfer()
+    }
+
+    const answer3 = await inquirer.prompt([
+      {
+        name: "amount",
+        message: `Quanto deseja transferir da conta ${accountName} para a conta ${accountName2}`,
+      },
+    ])
+
+    const amount = answer3["amount"]
+    transferAmount(accountName, accountName2, amount)
+  } catch (err) {
+    console.log(err)
+  }
 }
 
 function transferAmount(accountName, accountName2, amount) {
   const accountData = getAccount(accountName)
   const account2Data = getAccount(accountName2)
 
-  if (!amount) {
+  if (!amount || amount < 0 || amount == 0) {
     console.log(
       chalk.bgRed.black("Ocorreu um erro, tente novamente mais tarde!")
     )
@@ -369,23 +375,23 @@ function transferAmount(accountName, accountName2, amount) {
 }
 
 // Transaction History
-function transactionHistory() {
-  inquirer
-    .prompt([
+async function transactionHistory() {
+  try {
+    const answer = await inquirer.prompt([
       {
         name: "accountName",
         message: "Digite o nome da conta!",
       },
     ])
-    .then((answer) => {
-      const accountName = answer["accountName"]
-      if (!checkAccount(accountName)) {
-        return transactionHistory()
-      }
+    const accountName = answer["accountName"]
+    if (!checkAccount(accountName)) {
+      return transactionHistory()
+    }
 
-      displayTransactionHistory(accountName)
-    })
-    .catch((err) => console.log(err))
+    displayTransactionHistory(accountName)
+  } catch (err) {
+    console.log(err)
+  }
 }
 
 function displayTransactionHistory(accountName) {
@@ -409,6 +415,8 @@ function displayTransactionHistory(accountName) {
       if (transaction.fromAccount) {
         transactionInfo += `, Transferência de: ${transaction.fromAccount}`
       }
+
+      //switch case
       if (
         transaction.type === "deposit" ||
         transaction.type === "transfer in"
