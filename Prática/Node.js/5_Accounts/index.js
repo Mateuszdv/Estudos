@@ -20,7 +20,7 @@ const choices = {
 
 const login = {
   "Criar Conta": createAccount,
-  "Entrar no sistema": "",
+  "Entrar no sistema": accountLogin,
   Sair: undefined,
 }
 
@@ -186,10 +186,50 @@ async function deposit() {
 
 function checkAccount(accountName) {
   if (!fs.existsSync(`accounts/${accountName}.json`)) {
-    console.log(chalk.bgRed.black("Esta conta não existe, escolha outro nome"))
+    console.log(chalk.bgRed.black("Esta conta não existe."))
     return false
   }
+
   return true
+}
+
+async function accountLogin() {
+  try {
+    const answer = await inquirer.prompt([
+      {
+        name: "accountName",
+        message: "Digite seu CPF",
+      },
+    ])
+    const accountName = answer["accountName"]
+
+    if (!fs.existsSync(`accounts/${accountName}.json`)) {
+      console.log(chalk.bgRed.black("Esta conta não existe!"))
+      accountLogin()
+      return
+    }
+    const answer2 = await inquirer.prompt([
+      {
+        type: "password",
+        name: "password",
+        mask: "*",
+        message: "Digite a sua senha",
+      },
+    ])
+    const accountPassword = answer2["password"]
+    const accountData = getAccount(accountName)
+
+    if (accountData.password != accountPassword) {
+      console.log(chalk.bgRed.black("Senha Incorreta, tente novamente."))
+      accountLogin()
+      return
+    }
+
+    operation()
+    return accountName
+  } catch (err) {
+    console.log(err)
+  }
 }
 
 function checkCPF(accountName) {
