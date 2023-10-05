@@ -1,1 +1,0 @@
-{"balance":300,"transactions":[{"type":"deposit","amount":1000},{"type":"transfer out","amount":500,"toAccount":"mateus"},{"type":"withdrawal","amount":200}]}

@@ -24,11 +24,13 @@ const login = {
   Sair: undefined,
 }
 
+let accountName = ""
+
 menu()
 
 //Criar um novo menu de acessar conta ou criar uma nova conta OK!
-//Todas as operações utilizem a conta acessada/criada
-//Não deve ser possivel, chegar no menu de operações sem uma conta valida acessada
+//Todas as operações utilizem a conta acessada/criada OK!
+//Não deve ser possivel, chegar no menu de operações sem uma conta valida acessada OK!
 //Criar conta com CPF (validação de cpf com pacote npm) OK!
 //Tentar alterar a logica da transactionHistory
 //Tentar trabalhar com funçoes asincronas ao inves de promises OK!
@@ -101,19 +103,19 @@ async function buildAccount() {
   try {
     const answer = await inquirer.prompt([
       {
-        name: "accountName",
+        name: "accountCPF",
         message: "Digite um nome para a sua conta:",
       },
     ])
-    const accountName = answer["accountName"]
-    console.info(cpf.mask(accountName))
+    const accountCPF = answer["accountCPF"]
+    console.info(cpf.mask(accountCPF))
 
-    if (!checkCPF(accountName)) {
+    if (!checkCPF(accountCPF)) {
       buildAccount()
       return
     }
 
-    if (fs.existsSync(`accounts/${accountName}.json`)) {
+    if (fs.existsSync(`accounts/${cpf.mask(accountCPF)}.json`)) {
       console.log(
         chalk.bgRed.black("Esta conta já existe, escolha outro nome.")
       )
@@ -136,7 +138,7 @@ async function buildAccount() {
     }
 
     fs.writeFileSync(
-      `accounts/${accountName}.json`,
+      `accounts/${cpf.mask(accountCPF)}.json`,
       JSON.stringify({
         balance: 0,
         transactions: [],
@@ -148,6 +150,7 @@ async function buildAccount() {
     )
 
     console.log(chalk.green("Parabéns, a sua conta foi criada."))
+    accountName = accountCPF
     operation()
   } catch (err) {
     console.log(err)
@@ -157,40 +160,20 @@ async function buildAccount() {
 //add an amount to user account
 async function deposit() {
   try {
-    const answer = await inquirer.prompt([
-      {
-        name: "accountName",
-        message: "Qual o nome da sua conta?",
-      },
-    ])
-    const accountName = answer["accountName"]
-
-    //verify if account exists
-    if (!checkAccount(accountName)) {
-      return deposit()
-    }
-    answer2 = await inquirer.prompt([
+    console.log(accountName)
+    answer = await inquirer.prompt([
       {
         name: "amount",
         message: "Quanto você deseja depositar? ",
       },
     ])
-    const amount = answer2["amount"]
+    const amount = answer["amount"]
 
     //add an amount
     addAmount(accountName, amount)
   } catch (err) {
     console.log(err)
   }
-}
-
-function checkAccount(accountName) {
-  if (!fs.existsSync(`accounts/${accountName}.json`)) {
-    console.log(chalk.bgRed.black("Esta conta não existe."))
-    return false
-  }
-
-  return true
 }
 
 async function accountLogin() {
@@ -201,9 +184,8 @@ async function accountLogin() {
         message: "Digite seu CPF",
       },
     ])
-    const accountName = answer["accountName"]
-
-    if (!fs.existsSync(`accounts/${accountName}.json`)) {
+    const accountCPF = cpf.mask(answer["accountName"])
+    if (!fs.existsSync(`accounts/${accountCPF}.json`)) {
       console.log(chalk.bgRed.black("Esta conta não existe!"))
       accountLogin()
       return
@@ -217,14 +199,14 @@ async function accountLogin() {
       },
     ])
     const accountPassword = answer2["password"]
-    const accountData = getAccount(accountName)
+    const accountData = getAccount(accountCPF)
 
     if (accountData.password != accountPassword) {
       console.log(chalk.bgRed.black("Senha Incorreta, tente novamente."))
       accountLogin()
       return
     }
-
+    accountName = accountCPF
     operation()
     return accountName
   } catch (err) {
@@ -252,7 +234,7 @@ function addAmount(accountName, amount) {
   accountData.transactions.push({ type: "deposit", amount: parseFloat(amount) })
 
   fs.writeFileSync(
-    `accounts/${accountName}.json`,
+    `accounts/${cpf.mask(accountName)}.json`,
     JSON.stringify(accountData),
     function (err) {
       console.log(err)
@@ -266,29 +248,19 @@ function addAmount(accountName, amount) {
 }
 
 function getAccount(accountName) {
-  const accountJSON = fs.readFileSync(`accounts/${accountName}.json`, {
-    encoding: "utf8",
-    flag: "r",
-  })
+  const accountJSON = fs.readFileSync(
+    `accounts/${cpf.mask(accountName)}.json`,
+    {
+      encoding: "utf8",
+      flag: "r",
+    }
+  )
   return JSON.parse(accountJSON)
 }
 
 // show account balance
 async function getAccountBalance() {
   try {
-    const answer = await inquirer.prompt([
-      {
-        name: "accountName",
-        message: "Qual o nome da sua conta?",
-      },
-    ])
-    const accountName = answer["accountName"]
-
-    //verify if account exists
-    if (!checkAccount(accountName)) {
-      return getAccountBalance()
-    }
-
     const accountData = getAccount(accountName)
 
     console.log(
@@ -307,22 +279,11 @@ async function withdraw() {
   try {
     const answer = await inquirer.prompt([
       {
-        name: "accountName",
-        message: "Qual o nome da sua conta?",
-      },
-    ])
-    const accountName = answer["accountName"]
-
-    if (!checkAccount(accountName)) {
-      return withdraw()
-    }
-    const answer2 = await inquirer.prompt([
-      {
         name: "amount",
         message: "Quanto você deseja sacar?",
       },
     ])
-    const amount = answer2["amount"]
+    const amount = answer["amount"]
     removeAmount(accountName, amount)
   } catch (err) {
     console.log(err)
@@ -351,7 +312,7 @@ function removeAmount(accountName, amount) {
   })
 
   fs.writeFileSync(
-    `accounts/${accountName}.json`,
+    `accounts/${cpf.mask(accountName)}.json`,
     JSON.stringify(accountData),
     function (err) {
       console.log(err)
@@ -371,35 +332,28 @@ async function transfer() {
   try {
     const answer = await inquirer.prompt([
       {
-        name: "accountName",
-        message: "Qual a sua conta?",
-      },
-    ])
-    const accountName = answer["accountName"]
-
-    if (!checkAccount(accountName)) {
-      return transfer()
-    }
-    const answer2 = await inquirer.prompt([
-      {
         name: "accountName2",
         message: "Para qual conta deseja transferir?",
       },
     ])
-    const accountName2 = answer2["accountName2"]
+    const accountName2 = answer["accountName2"]
 
-    if (!checkAccount(accountName2)) {
-      return transfer()
+    if (!fs.existsSync(`accounts/${accountName2}.json`)) {
+      console.log(chalk.bgRed.black("Esta conta não existe!"))
+      accountLogin()
+      return
     }
 
-    const answer3 = await inquirer.prompt([
+    const answer2 = await inquirer.prompt([
       {
         name: "amount",
-        message: `Quanto deseja transferir da conta ${accountName} para a conta ${accountName2}`,
+        message: `Quanto deseja transferir da conta ${cpf.mask(
+          accountName
+        )} para a conta ${cpf.mask(accountName2)}`,
       },
     ])
 
-    const amount = answer3["amount"]
+    const amount = answer2["amount"]
     transferAmount(accountName, accountName2, amount)
   } catch (err) {
     console.log(err)
@@ -437,14 +391,14 @@ function transferAmount(accountName, accountName2, amount) {
   })
 
   fs.writeFileSync(
-    `accounts/${accountName}.json`,
+    `accounts/${cpf.mask(accountName)}.json`,
     JSON.stringify(accountData),
     function (err) {
       console.log(err)
     }
   )
   fs.writeFileSync(
-    `accounts/${accountName2}.json`,
+    `accounts/${cpf.mask(accountName2)}.json`,
     JSON.stringify(account2Data),
     function (err) {
       console.log(err)
@@ -461,17 +415,6 @@ function transferAmount(accountName, accountName2, amount) {
 // Transaction History
 async function transactionHistory() {
   try {
-    const answer = await inquirer.prompt([
-      {
-        name: "accountName",
-        message: "Digite o nome da conta!",
-      },
-    ])
-    const accountName = answer["accountName"]
-    if (!checkAccount(accountName)) {
-      return transactionHistory()
-    }
-
     displayTransactionHistory(accountName)
   } catch (err) {
     console.log(err)
