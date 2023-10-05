@@ -1,6 +1,7 @@
 //modulos externos
 const inquirer = require("inquirer")
 const chalk = require("chalk")
+const { isCPF, isCNPJ } = require("validation-br")
 
 //modulos internos
 const fs = require("fs")
@@ -23,7 +24,7 @@ operation()
 //Criar um novo menu de acessar conta ou criar uma nova conta
 //Todas as operações utilizem a conta acessada/criada
 //Não deve ser possivel, chegar no menu de operações sem uma conta valida acessada
-//Criar conta com CPF (validação de cpf com pacote npm)
+//Criar conta com CPF (validação de cpf com pacote npm) OK!
 //Tentar alterar a logica da transactionHistory
 //Tentar trabalhar com funçoes asincronas ao inves de promises OK!
 
@@ -76,6 +77,11 @@ async function buildAccount() {
     ])
     const accountName = answer["accountName"]
     console.info(accountName)
+
+    if (!checkCPF(accountName)) {
+      buildAccount()
+      return
+    }
 
     const answer2 = await inquirer.prompt([
       {
@@ -151,6 +157,14 @@ async function deposit() {
 function checkAccount(accountName) {
   if (!fs.existsSync(`accounts/${accountName}.json`)) {
     console.log(chalk.bgRed.black("Esta conta não existe, escolha outro nome"))
+    return false
+  }
+  return true
+}
+
+function checkCPF(accountName) {
+  if (!isCPF(accountName)) {
+    console.log(chalk.bgRed.black("Esse CPF não é válido, tente novamente."))
     return false
   }
   return true
