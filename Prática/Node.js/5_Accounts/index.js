@@ -1,7 +1,7 @@
 //modulos externos
 const inquirer = require("inquirer")
 const chalk = require("chalk")
-const { isCPF, isCNPJ } = require("validation-br")
+const cpf = require("node-cpf")
 
 //modulos internos
 const fs = require("fs")
@@ -76,9 +76,17 @@ async function buildAccount() {
       },
     ])
     const accountName = answer["accountName"]
-    console.info(accountName)
+    console.info(cpf.mask(accountName))
 
     if (!checkCPF(accountName)) {
+      buildAccount()
+      return
+    }
+
+    if (fs.existsSync(`accounts/${accountName}.json`)) {
+      console.log(
+        chalk.bgRed.black("Esta conta já existe, escolha outro nome.")
+      )
       buildAccount()
       return
     }
@@ -95,14 +103,6 @@ async function buildAccount() {
 
     if (!fs.existsSync("accounts")) {
       fs.mkdirSync("accounts")
-    }
-
-    if (fs.existsSync(`accounts/${accountName}.json`)) {
-      console.log(
-        chalk.bgRed.black("Esta conta já existe, escolha outro nome.")
-      )
-      buildAccount()
-      return
     }
 
     fs.writeFileSync(
@@ -163,7 +163,7 @@ function checkAccount(accountName) {
 }
 
 function checkCPF(accountName) {
-  if (!isCPF(accountName)) {
+  if (!cpf.validate(accountName)) {
     console.log(chalk.bgRed.black("Esse CPF não é válido, tente novamente."))
     return false
   }
