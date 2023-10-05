@@ -10,7 +10,6 @@ const { parse } = require("path")
 
 console.log("Iniciamos o Accounts")
 const choices = {
-  "Criar Conta": createAccount,
   "Consultar Saldo": getAccountBalance,
   Depositar: deposit,
   Transferir: transfer,
@@ -19,9 +18,15 @@ const choices = {
   Sair: undefined,
 }
 
-operation()
+const login = {
+  "Criar Conta": createAccount,
+  "Entrar no sistema": "",
+  Sair: undefined,
+}
 
-//Criar um novo menu de acessar conta ou criar uma nova conta
+menu()
+
+//Criar um novo menu de acessar conta ou criar uma nova conta OK!
 //Todas as operações utilizem a conta acessada/criada
 //Não deve ser possivel, chegar no menu de operações sem uma conta valida acessada
 //Criar conta com CPF (validação de cpf com pacote npm) OK!
@@ -34,6 +39,31 @@ operation()
 // Protocolo http de comunicação
 // Padrão APIRestfull
 // Status code http
+
+async function menu() {
+  console.log(Object.keys(login))
+  try {
+    const answer = await inquirer.prompt([
+      {
+        type: "list",
+        name: "action",
+        message: "O que você deseja fazer?",
+        choices: Object.keys(login),
+      },
+    ])
+    const action = answer["action"]
+    const actionFunction = login[action]
+
+    if (!actionFunction) {
+      console.log(chalk.bgBlue.black("Obrigado por usar o Accounts"))
+      process.exit()
+    }
+
+    actionFunction()
+  } catch (err) {
+    console.log(err)
+  }
+}
 
 async function operation() {
   try {
