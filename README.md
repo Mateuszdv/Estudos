@@ -25,7 +25,7 @@ Este repositório é pessoal e destinado a mostrar meu progresso nos estudos. N�
 
 ## Contato
 
-Se você é um recrutador ou deseja entrar em contato comigo, sinta-se à vontade para enviar uma mensagem por meio do GitHub ou pelo seguinte e-mail: [seu-email@gmail.com](mailto:seu-email@gmail.com).
+Se você é um recrutador ou deseja entrar em contato comigo, sinta-se à vontade para enviar uma mensagem por meio do GitHub ou pelo seguinte e-mail: [mateusd.vasc@gmail.com](mailto:mateusd.vasc@gmail.com).
 
 ---
 
